@@ -1,43 +1,68 @@
 package com.xdesign.takehome.ui.home
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import com.google.gson.GsonBuilder
+import androidx.appcompat.widget.SearchView
+import androidx.fragment.app.viewModels
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.xdesign.takehome.base.BaseFragment
 import com.xdesign.takehome.databinding.FragmentHomeBinding
-import com.xdesign.takehome.models.ApiCharacter
-import com.xdesign.takehome.ui.CharacterRecyclerViewAdapter
-import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Header
+import dagger.hilt.android.AndroidEntryPoint
 
-const val base_Url = "https://yj8ke8qonl.execute-api.eu-west-1.amazonaws.com"
+@AndroidEntryPoint
+class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
 
-class HomeFragment : Fragment() {
+    private val viewModel: HomeViewModel by viewModels()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = FragmentHomeBinding.inflate(inflater, container, false).apply {
-        var retrofit = Retrofit.Builder().baseUrl(base_Url).addConverterFactory(GsonConverterFactory.create(GsonBuilder().create())).client(OkHttpClient.Builder().build()).build()
-        var service = retrofit.create(Service::class.java)
-        viewLifecycleOwner.lifecycleScope.launch {
-            var _characters = service.getCharacters("Bearer 754t!si@glcE2qmOFEcN")
-            var charactersBody = _characters.body()!!
-            characters.adapter = CharacterRecyclerViewAdapter(charactersBody)
+    lateinit var characterAdapter: CharacterRecyclerViewAdapter
+
+    private val observers by lazy {
+        viewModel.errorLiveData.observe(this) {
+            it?.let {
+                showError(it)
+            }
         }
-    }.root
-}
 
-interface Service {
-    @GET("/characters")
-    suspend fun getCharacters(@Header("Authorization") token: String): Response<List<ApiCharacter>>
+        viewModel.characterListLiveData.observe(this) {
+            it?.let { list ->
+                characterAdapter = CharacterRecyclerViewAdapter(list)
+                binding.characters.adapter = characterAdapter
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.button.setOnClickListener { viewModel.getCharacters() }
+
+        observers
+        viewModel.getCharacters()
+        setSearchQueryListener()
+    }
+
+    private fun setSearchQueryListener() {
+        binding.searchView.apply {
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    characterAdapter.filter(query)
+                    return false
+                }
+
+                override fun onQueryTextChange(query: String?): Boolean {
+                    characterAdapter.filter(query)
+                    return false
+                }
+            })
+        }
+    }
+
+    private fun showError(message: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Error")
+            .setMessage(message)
+            .setPositiveButton("Okay") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+    }
 }

@@ -1,14 +1,19 @@
-package com.xdesign.takehome.ui
+package com.xdesign.takehome.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.xdesign.takehome.databinding.FragmentCharacterBinding
-import com.xdesign.takehome.models.ApiCharacter
+import com.xdesign.takehome.data.models.ApiCharacter
 
 class CharacterRecyclerViewAdapter(
     private val values: List<ApiCharacter>
 ) : RecyclerView.Adapter<CharacterRecyclerViewAdapter.CharacterViewHolder>() {
+
+    var characterList = values
+
+    lateinit var mRecyclerView: RecyclerView
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
 
@@ -21,10 +26,33 @@ class CharacterRecyclerViewAdapter(
         )
     }
 
-    override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) =
-        holder.bind(values[position])
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        mRecyclerView = recyclerView
+    }
 
-    override fun getItemCount(): Int = values.size
+    override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) =
+        holder.bind(characterList[position])
+
+    override fun getItemCount(): Int = characterList.size
+
+    fun filter(text: String?) {
+        text?.let {
+            val filteredList = mutableListOf<ApiCharacter>()
+
+            for (item in values) {
+                if (item.name.lowercase().contains(text.lowercase())) {
+                    filteredList.add(item)
+                }
+            }
+            if (filteredList.isNotEmpty()) {
+                characterList = filteredList
+                notifyDataSetChanged()
+            } else {
+                Toast.makeText(mRecyclerView.context, "No Data Found", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     inner class CharacterViewHolder(private val binding: FragmentCharacterBinding) :
         RecyclerView.ViewHolder(binding.root) {

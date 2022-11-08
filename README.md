@@ -35,3 +35,15 @@ We would like you to fix the app's user facing issues (both documented and undoc
 Please use version control. Import the supplied code as is to git and commit your changes through that. This will allow us to review the changes you have made.
 
 We expect you should spend no more than 3 hours on this work. We appreciate you taking the time to work on this and understand that sometimes it's not possible to spend as much time as you would like. If there are any aspects of the codebase you would have liked to work on with more time, please detail these in the ReadME file to give us some insight in to your process.
+
+## Further changes if time were available
+ - Season format in list, grouping the seasons in ranges. 
+ - Create a unit test for the new season grouping logic
+ - Move all strings and values to strings.xml and dimens.xml respectively
+ - Further clean up layout files to make better use of constraint and linear layouts (specifically fragment_character.xml)
+ - Use data binding to insert livedata directly into layout
+ - Create styles for text views and other UI elements
+ - Make status bar transparent
+ - Have base url and authentication token taken from a local file or build config
+ - Move search filter logic into a utils class (then create a unit test for it)
+ - Review warnings raised in code analysis
